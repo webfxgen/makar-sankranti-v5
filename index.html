@@ -39,6 +39,7 @@
             background-position:  10px 0, 10px 0, 0 0, 0 0;
             background-size: 20px 20px;
             background-repeat: repeat;
+            /* Use dvh for better mobile height handling */
             height: 100vh;
             height: 100dvh; 
             display: flex;
@@ -87,12 +88,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* Align contents to the top */
+            padding-top: 110px; /* Add spacing from top edge */
             height: 100%;
         }
 
         /* --- Rich Premium Pop Art Card --- */
         .card {
+            background: #fff;
             color: #222;
             padding: 2.5rem 2rem;
             text-align: center;
@@ -360,9 +363,9 @@
         @media (max-width: 600px) {
             .card { 
                 width: 90%; 
-                top: 50px; 
+                top: 0; /* Reset top so it respects container padding */
                 padding: 1.5rem 1rem; 
-                max-height: calc(100vh - 160px); 
+                max-height: calc(100vh - 200px); 
             }
             #wishPage { padding-bottom: 2rem; }
             .card-icon { margin-bottom: 5px; font-size: 1.5rem; }
