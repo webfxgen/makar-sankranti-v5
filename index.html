@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patang Utsav! 🪁</title>
+    
+    <!-- Meta Tags -->
+    <meta property="og:title" content="🪁 Oye! A Colorful Patang Wish for You!">
+    <meta property="og:description" content="Check out this vibrant Makar Sankranti surprise! Full on festive vibes inside. 😎✨">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1610992323497-626244673322?q=80&w=1200&auto=format&fit=crop">
+    
+    <!-- Fonts: Rozha One (Bold Serif), Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Rozha+One&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    
+    <style>
+        :root {
+            /* Desi Pop Palette */
+            --pop-pink: #FF007F; /* Main Theme Color (Dynamic) */
+            --pop-yellow: #FFD700;
+            --pop-blue: #00E5FF;
+            --pop-orange: #FF5E00;
+            --pop-purple: #8A2BE2;
+            --bg-pattern: #2c2c54;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            background-color: var(--bg-pattern);
+            /* ZigZag Pattern */
+            background-image: 
+                linear-gradient(135deg, #30305b 25%, transparent 25%), 
+                linear-gradient(225deg, #30305b 25%, transparent 25%), 
+                linear-gradient(45deg, #30305b 25%, transparent 25%), 
+                linear-gradient(315deg, #30305b 25%, transparent 25%);
+            background-position:  10px 0, 10px 0, 0 0, 0 0;
+            background-size: 20px 20px;
+            background-repeat: repeat;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            /* Prevent select on mobile for better game feel */
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* --- Canvas for Kites --- */
+        #skyCanvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            cursor: crosshair; /* Indicates interactivity */
+        }
+
+        /* --- Scoreboard --- */
+        .score-board {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: #000;
+            color: var(--pop-yellow);
+            padding: 8px 15px;
+            font-family: 'Rozha One', serif;
+            border: 3px solid var(--pop-pink);
+            box-shadow: 4px 4px 0 var(--pop-blue);
+            z-index: 100;
+            font-size: 1.1rem;
+            pointer-events: none; /* Allow clicks to pass through to kites behind */
+            display: none; /* Hidden until game starts */
+            transform: rotate(-2deg);
+        }
+        .score-board span { color: #fff; }
+
+        /* --- Kai Po Che Popup Styles --- */
+        .kp-popup {
+            position: absolute;
+            font-family: 'Rozha One', serif;
+            font-size: 1.2rem;
+            color: #fff;
+            background: #000;
+            padding: 5px 10px;
+            transform: rotate(-10deg);
+            pointer-events: none;
+            z-index: 20;
+            border: 2px solid var(--pop-yellow);
+            box-shadow: 3px 3px 0 var(--pop-pink);
+            animation: popUpFade 1s forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes popUpFade {
+            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+            100% { transform: scale(1) translateY(-50px) rotate(-10deg); opacity: 0; }
+        }
+
+        /* --- Hanging Toran (Decorations) --- */
+        .toran-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .toran-piece {
+            width: 0; 
+            height: 0; 
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 40px solid var(--pop-pink);
+            transform-origin: top center;
+            animation: sway 3s ease-in-out infinite;
+            transition: border-top-color 0.3s;
+        }
+        
+        .toran-piece:nth-child(even) { border-top-color: var(--pop-yellow); animation-delay: 0.5s; }
+        .toran-piece:nth-child(3n) { border-top-color: var(--pop-blue); animation-delay: 1s; }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(5deg); }
+            50% { transform: rotate(-5deg); }
+        }
+
+        /* --- Main Container --- */
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 450px;
+            perspective: 1000px;
+            /* CRITICAL FIX: Allow clicks to pass through empty space */
+            pointer-events: none; 
+        }
+
+        /* --- Pop Art Card --- */
+        .card {
+            background: #fff;
+            color: #222;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            /* Funky Border */
+            border: 8px solid var(--pop-orange);
+            outline: 4px dashed var(--pop-yellow);
+            outline-offset: -15px;
+            border-radius: 2px;
+            box-shadow: 15px 15px 0px var(--pop-purple);
+            
+            position: absolute;
+            width: 100%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: none; 
+            opacity: 0;
+            max-height: 80vh;
+            overflow-y: auto;
+            
+            /* Enable clicks on the card itself */
+            pointer-events: auto;
+            
+            /* Paper texture overlay */
+            background-image: radial-gradient(#ddd 1px, transparent 1px);
+            background-size: 10px 10px;
+        }
+        .card::-webkit-scrollbar { display: none; }
+
+        .card.active {
+            display: block;
+            opacity: 1;
+            animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: translate(-50%, -50%) scale(0.3) rotate(-10deg); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        /* --- Typography --- */
+        h1 {
+            font-family: 'Rozha One', serif;
+            font-size: 2.5rem;
+            color: var(--pop-pink);
+            text-shadow: 2px 2px 0px var(--pop-yellow);
+            margin-bottom: 10px;
+            line-height: 1.2;
+            transition: color 0.3s;
+        }
+
+        .wish-text {
+            font-family: 'Rozha One', serif;
+            font-size: 2.8rem;
+            color: var(--pop-purple);
+            text-shadow: 3px 3px 0px var(--pop-blue);
+            transform: skew(-5deg);
+            margin: 20px 0;
+            border-top: 3px solid var(--pop-orange);
+            border-bottom: 3px solid var(--pop-orange);
+            padding: 10px 0;
+            display: inline-block;
+            line-height: 1.1;
+        }
+
+        .sub-text {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            color: #444;
+        }
+
+        /* --- Vibe Selector --- */
+        .vibe-section {
+            margin-bottom: 20px;
+        }
+        .vibe-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .vibe-options {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .vibe-dot {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            border: 2px solid #000;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .vibe-dot:hover { transform: scale(1.2); }
+        .vibe-dot.active { transform: scale(1.2); border-width: 3px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+
+        /* --- Quirky Inputs --- */
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 3px solid var(--pop-blue);
+            background: #f0faff;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            outline: none;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.1);
+            transition: 0.2s;
+        }
+
+        input[type="text"]:focus {
+            background: #fff;
+            transform: translate(-2px, -2px);
+            box-shadow: 7px 7px 0px var(--pop-blue);
+        }
+
+        /* --- Pop Buttons --- */
+        .btn {
+            background: var(--pop-pink);
+            color: white;
+            padding: 12px 30px;
+            border: 3px solid #000;
+            font-family: 'Rozha One', serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 8px;
+            box-shadow: 5px 5px 0px #000;
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 7px 7px 0px #000;
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #000;
+        }
+
+        .btn-secondary {
+            background: var(--pop-blue);
+            color: #000;
+        }
+
+        /* Razorpay Override */
+        .razorpay-payment-button {
+            background: var(--pop-yellow) !important;
+            color: #000 !important;
+            border: 3px solid #000 !important;
+            border-radius: 0 !important;
+            padding: 8px 20px !important;
+            font-family: 'Rozha One', serif !important;
+            box-shadow: 4px 4px 0 #000 !important;
+            min-height: 45px;
+            transition: 0.1s !important;
+        }
+        .razorpay-payment-button:active {
+            transform: translate(2px, 2px) !important;
+            box-shadow: 1px 1px 0 #000 !important;
+        }
+
+        /* --- Decorations --- */
+        .decoration-icon {
+            font-size: 2rem;
+            color: var(--pop-orange);
+            margin: 0 10px;
+            animation: spinSlow 5s linear infinite;
+        }
+        @keyframes spinSlow { to { transform: rotate(360deg); } }
+
+        .signature {
+            margin-top: 20px;
+            font-weight: 600;
+            background: var(--pop-yellow);
+            display: inline-block;
+            padding: 5px 15px;
+            transform: rotate(-2deg);
+            border: 2px solid #000;
+        }
+
+        /* --- Footer --- */
+        .footer-credit {
+            position: fixed; top: 10px; right: 10px; z-index: 100;
+            background: #000; color: var(--pop-yellow);
+            padding: 5px 10px; font-size: 0.7rem;
+            font-weight: bold; transform: rotate(2deg);
+            pointer-events: auto;
+        }
+        .footer-credit a { color: var(--pop-pink); text-decoration: none; }
+
+        .footer-support {
+            position: fixed; bottom: 20px; left: 20px; z-index: 100;
+            pointer-events: auto;
+        }
+
+        .action-buttons {
+            position: fixed; bottom: 80px; width: 100%;
+            display: none; justify-content: center; gap: 15px;
+            z-index: 90;
+            pointer-events: auto;
+        }
+        .action-buttons.visible { display: flex; }
+
+        /* --- Loading Overlay --- */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--pop-blue);
+            z-index: 100; display: flex; justify-content: center; align-items: center;
+            flex-direction: column; opacity: 0; pointer-events: none; transition: 0.5s;
+        }
+        .overlay.visible { opacity: 1; pointer-events: all; }
+        
+        .loader-kite {
+            font-size: 4rem; color: var(--pop-pink);
+            animation: bounce 0.5s infinite alternate;
+        }
+        @keyframes bounce { to { transform: translateY(-20px); } }
+
+        /* --- Toast --- */
+        #toast {
+            visibility: hidden; min-width: 250px; margin-left: -125px;
+            background-color: #000; color: var(--pop-yellow);
+            text-align: center; border: 3px solid var(--pop-pink);
+            padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px;
+            font-weight: bold; font-family: 'Poppins'; box-shadow: 5px 5px 0 var(--pop-pink);
+        }
+        #toast.show { visibility: visible; bottom: 150px; }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            .card { width: 90%; padding: 1.5rem; top: 45%; border-width: 5px; box-shadow: 8px 8px 0px var(--pop-purple); }
+            h1 { font-size: 1.8rem; }
+            .wish-text { font-size: 2.2rem; }
+            .btn { padding: 10px 15px; font-size: 0.9rem; }
+            .action-buttons { flex-direction: row; bottom: 70px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toran (Hanging Decor) -->
+    <div class="toran-container">
+        <div class="toran-piece"></div><div class="toran-piece"></div><div class="toran-piece"></div>
+        <div class="toran-piece"></div><div class="toran-piece"></div><div class="toran-piece"></div>
+        <div class="toran-piece"></div><div class="toran-piece"></div><div class="toran-piece"></div>
+        <div class="toran-piece"></div><div class="toran-piece"></div><div class="toran-piece"></div>
+    </div>
+
+    <div class="score-board" id="scoreBoard">
+        CUTS: <span id="scoreDisplay">0</span>
+    </div>
+
+    <canvas id="skyCanvas"></canvas>
+
+    <!-- Overlay -->
+    <div class="overlay" id="loadingOverlay">
+        <div class="loader-kite"><i class="fas fa-gem"></i></div>
+        <h2 style="font-family: 'Rozha One'; color: #000;">Sajaoing...</h2>
+    </div>
+
+    <div id="toast">Link Copied!</div>
+
+    <div class="footer-credit">
+        DESIGN: <a href="https://www.webfxgen.in/" target="_blank">WEBFXGEN</a>
+    </div>
+
+    <div class="container" id="cardContainer">
+        <!-- Input Page -->
+        <div class="card active" id="inputPage">
+            <i class="fas fa-sun decoration-icon"></i>
+            <h1>Patang Utsav!</h1>
+            
+            <!-- Vibe Selector -->
+            <div class="vibe-section">
+                <div class="vibe-label">Choose your Vibe:</div>
+                <div class="vibe-options">
+                    <div class="vibe-dot active" style="background: #FF007F;" onclick="setTheme('#FF007F', this)"></div>
+                    <div class="vibe-dot" style="background: #FF5E00;" onclick="setTheme('#FF5E00', this)"></div>
+                    <div class="vibe-dot" style="background: #32ff7e;" onclick="setTheme('#32ff7e', this)"></div>
+                </div>
+            </div>
+
+            <p class="sub-text">Chalo, let's fly some kites!</p>
+            <input type="text" id="userNameInput" placeholder="Aap ka Naam..." autocomplete="off">
+            <button class="btn" onclick="generateWish()">Start Fun</button>
+            
+            <p style="font-size: 0.7rem; color: #777; margin-top: 15px; font-style: italic;">
+                (Tip: Swipe or Tap kites to CUT them!)
+            </p>
+        </div>
+
+        <!-- Wish Page -->
+        <div class="card" id="wishPage">
+            <div style="font-size: 2rem; color: var(--pop-orange); margin-bottom: 10px;">
+                <i class="fas fa-om"></i>
+            </div>
+            <h2 style="font-size: 1.2rem; color: #666; text-transform: uppercase; letter-spacing: 2px;">Shubh</h2>
+            
+            <div class="wish-text" id="wishTitle">Makar Sankranti</div>
+            
+            <p class="sub-text">
+                "Life is like a kite... sometimes loose, sometimes tight! Enjoy the flight!"
+                <br><br>
+                <strong style="color: var(--pop-pink); font-size: 1.2rem;">Til-Gul Ghya, God God Bola!</strong>
+            </p>
+            
+            <div class="signature">
+                Dil Se,<br>
+                <span style="text-transform: uppercase; color: #000;" id="displaySenderName">User</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons" id="actionButtons">
+        <button class="btn" onclick="shareWish()">Share Karo</button>
+        <button class="btn btn-secondary" onclick="resetApp()">New Karo</button>
+    </div>
+
+    <div class="footer-support">
+        <form>
+            <script src="https://checkout.razorpay.com/v1/payment-button.js" data-payment_button_id="pl_S0CCnxIwut7hNL" async> </script> 
+        </form>
+    </div>
+
+    <script>
+        // --- Game State ---
+        let score = 0;
+
+        // --- Canvas ---
+        const canvas = document.getElementById('skyCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let kites = [];
+        let instructionCloud = null;
+        const colors = ['#FF007F', '#FFD700', '#00E5FF', '#FF5E00', '#8A2BE2'];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- Interaction Logic (Mouse & Touch) ---
+        let isDragging = false;
+
+        function handleInteraction(x, y) {
+            // Check if kite clicked or dragged over
+            for(let i = kites.length - 1; i >= 0; i--) {
+                let kite = kites[i];
+                // Check if hit (simple bounding box)
+                if(!kite.isCut && 
+                   x > kite.x - kite.size * 1.5 && x < kite.x + kite.size * 1.5 &&
+                   y > kite.y - kite.size * 1.5 && y < kite.y + kite.size * 1.5) {
+                    
+                    kite.cut(); 
+                    // Visuals
+                    showKaiPoChe(kite.x, kite.y, kite.isGolden);
+                    // Score
+                    const points = kite.isGolden ? 5 : 1;
+                    score += points;
+                    document.getElementById('scoreDisplay').innerText = score;
+                    break; // Cut one at a time for cleaner effect
+                }
+            }
+        }
+
+        // Mouse Events
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            const rect = canvas.getBoundingClientRect();
+            handleInteraction(e.clientX - rect.left, e.clientY - rect.top);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if(!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            handleInteraction(e.clientX - rect.left, e.clientY - rect.top);
+        });
+
+        canvas.addEventListener('mouseup', () => isDragging = false);
+        canvas.addEventListener('mouseleave', () => isDragging = false);
+
+        // Touch Events
+        canvas.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            // No preventDefault here to allow clicking buttons if they overlap, 
+            // but canvas is behind so fine.
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            handleInteraction(touch.clientX - rect.left, touch.clientY - rect.top);
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            // e.preventDefault(); // Uncomment if scrolling becomes an issue on canvas
+            if(!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            handleInteraction(touch.clientX - rect.left, touch.clientY - rect.top);
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', () => isDragging = false);
+
+
+        // Add Kai Po Che Popup
+        function showKaiPoChe(x, y, isGolden) {
+            const el = document.createElement('div');
+            el.className = 'kp-popup';
+            el.innerText = isGolden ? "BONUS +5!" : "Kai Po Che!";
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            if(isGolden) {
+                el.style.color = '#FFD700';
+                el.style.borderColor = '#FFF';
+            }
+            document.body.appendChild(el);
+            
+            setTimeout(() => { 
+                if(el.parentNode) el.parentNode.removeChild(el); 
+            }, 1000);
+        }
+
+        // --- Instruction Cloud Class ---
+        class InstructionCloud {
+            constructor() {
+                this.x = -250; 
+                this.y = Math.random() * (height / 4) + 50; 
+                this.speed = 1.5;
+                this.text1 = "पतंग काटने के लिए";
+                this.text2 = "टच या स्वाइप करें!";
+            }
+
+            update() {
+                this.x += this.speed;
+                if (this.x > width + 250) {
+                    this.x = -300; 
+                    this.y = Math.random() * (height / 4) + 50;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Draw Cloud Shape
+                ctx.fillStyle = '#fff';
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 3;
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, 30, Math.PI * 0.5, Math.PI * 1.5);
+                ctx.arc(25, -25, 35, Math.PI * 1, Math.PI * 1.85);
+                ctx.arc(75, -35, 40, Math.PI * 1.37, Math.PI * 1.91);
+                ctx.arc(130, -25, 35, Math.PI * 1.5, Math.PI * 0.5);
+                ctx.arc(70, 20, 40, Math.PI * 0.1, Math.PI * 0.9);
+                ctx.arc(20, 20, 30, Math.PI * 0.2, Math.PI * 0.8);
+                ctx.closePath();
+                
+                ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetY = 10;
+                
+                ctx.fill();
+                ctx.shadowColor = 'transparent'; 
+                ctx.stroke();
+
+                // Draw Text
+                ctx.fillStyle = '#FF007F'; 
+                ctx.font = 'bold 16px "Poppins", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                ctx.fillText(this.text1, 65, -10);
+                ctx.fillText(this.text2, 65, 12);
+
+                ctx.restore();
+            }
+        }
+
+        class DesiKite {
+            constructor(isBurst) {
+                this.x = Math.random() * width;
+                this.y = isBurst ? height / 2 : height + 100;
+                this.size = Math.random() * 30 + 20;
+                
+                // 1 in 20 chance for Golden Kite
+                this.isGolden = Math.random() > 0.95;
+                this.color = this.isGolden ? '#FFD700' : colors[Math.floor(Math.random() * colors.length)];
+                
+                this.speedY = isBurst ? -(Math.random() * 8 + 3) : -(Math.random() * 2 + 1);
+                this.speedX = (Math.random() - 0.5) * 2;
+                this.wobble = Math.random() * Math.PI * 2;
+                this.drag = isBurst ? 0.98 : 1;
+                
+                // Cut Logic
+                this.isCut = false;
+                this.cutSpin = 0;
+            }
+
+            cut() {
+                this.isCut = true;
+                this.speedY = 5; // Fall down rapidly
+                this.speedX = (Math.random() - 0.5) * 10; // Spin away
+            }
+
+            update() {
+                this.x += this.speedX + Math.sin(this.wobble) * 0.5;
+                
+                if (this.isCut) {
+                    this.y += this.speedY; // Falling
+                    this.cutSpin += 0.4; // Rapid spin
+                } else {
+                    this.y += this.speedY; // Flying up
+                    this.wobble += 0.1;
+                    this.speedX *= this.drag;
+                    
+                    // Wrap around if not cut
+                    if (this.drag === 1 && this.y < -50) {
+                        this.y = height + 50;
+                        this.x = Math.random() * width;
+                        // Reset properties for variety
+                        this.isGolden = Math.random() > 0.95;
+                        this.color = this.isGolden ? '#FFD700' : colors[Math.floor(Math.random() * colors.length)];
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Rotation logic: Normal wobble OR Crazy spin if cut
+                const rotation = this.isCut ? this.cutSpin : (Math.sin(this.wobble) * 0.2);
+                ctx.rotate(rotation + Math.PI/4);
+                
+                ctx.fillStyle = this.color;
+                
+                // Glow for Golden Kite
+                if (this.isGolden) {
+                    ctx.shadowColor = '#FFD700';
+                    ctx.shadowBlur = 20;
+                }
+
+                ctx.beginPath();
+                ctx.rect(-this.size/2, -this.size/2, this.size, this.size);
+                ctx.fill();
+                
+                // Bold outline for Pop Art look
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#000';
+                ctx.shadowBlur = 0; // Reset shadow for stroke
+                ctx.stroke();
+
+                // Decorative Center Dot
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size/4, 0, Math.PI*2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Tail
+                ctx.beginPath();
+                ctx.moveTo(0, this.size/1.5);
+                ctx.lineTo(-5, this.size + 15);
+                ctx.lineTo(5, this.size + 15);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        function initKites(count, isBurst = false) {
+            for (let i = 0; i < count; i++) {
+                kites.push(new DesiKite(isBurst));
+            }
+        }
+
+        // Initialize Instruction Cloud
+        instructionCloud = new InstructionCloud();
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Remove kites that fell deep off screen
+            kites = kites.filter(k => k.y < height + 200);
+            
+            kites.forEach(k => {
+                k.update();
+                k.draw();
+            });
+
+            // Update & Draw Cloud
+            if(instructionCloud) {
+                instructionCloud.update();
+                instructionCloud.draw();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        initKites(20);
+        animate();
+
+        // --- UI Logic ---
+        
+        // Smart Date Greeting
+        function updateGreeting() {
+            const today = new Date();
+            const month = today.getMonth(); // 0 is January
+            const date = today.getDate();
+            const year = today.getFullYear();
+            
+            // Check if it's January (0) and date is before 14th
+            let titleHTML = "Makar Sankranti";
+            
+            if (month === 0 && date < 14) {
+                titleHTML += "<br><span style='font-size:0.5em; color:var(--pop-blue)'>In Advance!</span>";
+            }
+            
+            document.getElementById('wishTitle').innerHTML = titleHTML;
+        }
+
+        function setTheme(color, el) {
+            // Change variable
+            document.documentElement.style.setProperty('--pop-pink', color);
+            
+            // Update active dot
+            if(el) {
+                document.querySelectorAll('.vibe-dot').forEach(d => d.classList.remove('active'));
+                el.classList.add('active');
+            }
+        }
+
+        function generateWish() {
+            const name = document.getElementById('userNameInput').value.trim();
+            if(!name) {
+                showToast("Naam toh likho yaar!");
+                return;
+            }
+
+            document.getElementById('loadingOverlay').classList.add('visible');
+            document.getElementById('inputPage').classList.remove('active');
+
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.remove('visible');
+                document.getElementById('displaySenderName').innerText = name;
+                
+                updateGreeting(); // Set correct greeting based on date
+
+                const wishPage = document.getElementById('wishPage');
+                wishPage.style.display = 'block';
+                document.getElementById('actionButtons').classList.add('visible');
+                document.getElementById('scoreBoard').style.display = 'block'; // Show Score
+                
+                // Force Reflow
+                void wishPage.offsetWidth;
+                wishPage.classList.add('active');
+
+                // Burst!
+                initKites(50, true);
+            }, 1000);
+        }
+
+        function resetApp() {
+            try {
+               const newUrl = window.location.href.split('?')[0];
+               window.history.pushState({}, document.title, newUrl);
+            } catch (e) {}
+
+            document.getElementById('wishPage').classList.remove('active');
+            document.getElementById('actionButtons').classList.remove('visible');
+            document.getElementById('scoreBoard').style.display = 'none';
+            score = 0;
+            document.getElementById('scoreDisplay').innerText = "0";
+            
+            setTimeout(() => {
+                document.getElementById('wishPage').style.display = 'none';
+                const inputPage = document.getElementById('inputPage');
+                inputPage.style.display = 'block';
+                inputPage.classList.add('active');
+                document.getElementById('userNameInput').value = '';
+                kites = [];
+                initKites(20);
+            }, 500);
+        }
+
+        async function shareWish() {
+            const name = document.getElementById('displaySenderName').innerText;
+            const baseUrl = window.location.href.split('?')[0];
+            const shareUrl = `${baseUrl}?n=${encodeURIComponent(name)}`;
+            
+            let text = `🪁 *Oye! Check this out!* 🪁\n\n${name} has sent you a super colorful Desi Makar Sankranti wish!`;
+            
+            // Add competitive score to message if user played
+            if(score > 0) {
+                text += `\n\n🏆 I scored ${score} points cutting kites! Can you beat me?`;
+            }
+            
+            text += `\n\nTap to play & see the magic: 👇`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Patang Utsav Surprise',
+                        text: text,
+                        url: shareUrl
+                    });
+                } catch (err) {}
+            } else {
+                copyToClipboard(`${text}\n${shareUrl}`);
+            }
+        }
+
+        function copyToClipboard(text) {
+            const tempInput = document.createElement("textarea");
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            showToast("Link Copied! Balle Balle!");
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sharedName = urlParams.get('n');
+
+            if (sharedName) {
+                const decodedName = decodeURIComponent(sharedName);
+                document.getElementById('inputPage').classList.remove('active');
+                document.getElementById('displaySenderName').innerText = decodedName;
+                
+                updateGreeting(); // Set correct greeting based on date
+
+                const wishPage = document.getElementById('wishPage');
+                wishPage.style.display = 'block';
+                document.getElementById('actionButtons').classList.add('visible');
+                document.getElementById('scoreBoard').style.display = 'block'; // Show Score
+
+                setTimeout(() => {
+                    wishPage.classList.add('active');
+                    initKites(50, true);
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
